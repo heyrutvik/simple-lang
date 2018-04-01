@@ -1,11 +1,12 @@
-package com.rr.kernel
+package com.github.heyrutvik.simple
 
-import com.rr.kernel.ConstructImplicits._
-import com.rr.kernel.ConstructSyntax._
+import ConstructImplicits._
+import ConstructSyntax._
 
 class ExpressionTest extends UnitTest("Expression") {
 
   "Expression" should "follow as" in {
+    implicit val environment: Expr.Env = Map.empty
     val expression1 = Add(Mul(Num(1), Num(2)), Mul(Num(3), Num(4)))
     expression1.syntax should be ("1 * 2 + 3 * 4")
     expression1.isReducible should be (true)

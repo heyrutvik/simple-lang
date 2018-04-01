@@ -1,23 +1,25 @@
-package com.rr.kernel
+package com.github.heyrutvik.simple
 
 import cats.data.State
 import ConstructImplicits._
 import ConstructSyntax._
 
-case class Machine(expr: Expr) {
-  def syntax = s"<<${expr.syntax}>>"
+case class Machine(expr: Expr, env: Expr.Env) {
+  def print = println(s"\nexpr: ${expr.syntax}\nenv: $env\n")
 }
 
-object Machine extends App {
+object Machine {
 
   type MachineState[A] = State[Machine, A]
 
-  def interpreter(expr: Expr) = {
+  def interpreter(expr: Expr)(implicit env: Expr.Env) = {
 
     def end: MachineState[Boolean] = State.inspect(_ => false)
 
     def execute: MachineState[Boolean] = State { machine =>
-      (Machine(machine.expr.reduce), machine.expr.isReducible)
+      machine.print
+      val Product(newExpr, newEnv) = machine.expr.reduce
+      (Machine(newExpr, newEnv.getOrElse(Map.empty)), newExpr.isReducible)
     }
 
     def loop(m: MachineState[Boolean]): MachineState[Boolean] = {
@@ -32,8 +34,6 @@ object Machine extends App {
       m <- State.get
     } yield (m)
 
-    exec.runA(Machine(expr)).value.expr.syntax
+    exec.runA(Machine(expr, env)).value
   }
-
-  println(interpreter(Add(Mul(Num(1), Num(2)), Mul(Num(3), Num(4)))))
 }

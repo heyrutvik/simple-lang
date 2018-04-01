@@ -1,9 +1,9 @@
-package com.rr.kernel
+package com.github.heyrutvik.simple
 
-import com.rr.kernel.ConstructImplicits._
-import com.rr.kernel.ConstructSyntax._
+import ConstructImplicits._
+import ConstructSyntax._
 
-  class NumTest extends UnitTest("Num") {
+class NumTest extends UnitTest("Num") {
 
   "Number" should "convernt in string as" in {
     val ten = Num(10)

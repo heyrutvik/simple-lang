@@ -1,4 +1,4 @@
-package com.rr.kernel
+package com.github.heyrutvik.simple
 
 import org.scalatest._
 

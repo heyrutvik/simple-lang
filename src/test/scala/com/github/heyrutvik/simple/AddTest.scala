@@ -1,7 +1,7 @@
-package com.rr.kernel
+package com.github.heyrutvik.simple
 
-import com.rr.kernel.ConstructImplicits._
-import com.rr.kernel.ConstructSyntax._
+import ConstructImplicits._
+import ConstructSyntax._
 
 class AddTest extends UnitTest("Add") {
 
