@@ -1,10 +1,15 @@
 name := "simple-lang"
 version := "0.0.1"
-scalaVersion := "2.12.2"
+
+inThisBuild(Seq(
+  scalaOrganization := "org.typelevel",
+  scalaVersion      := "2.12.4-bin-typelevel-4"
+))
 
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
-  "org.typelevel" %% "cats-core" % "1.0.1"
+  "org.typelevel" %% "cats-core" % "1.0.1",
+  "com.chuusai" %% "shapeless" % "2.3.3"
 )
 
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
@@ -13,5 +18,6 @@ logBuffered in Test := false
 
 scalacOptions ++= Seq(
   "-Ypartial-unification",
-  "-language:higherKinds"
+  "-language:higherKinds",
+  "-Xlog-implicits"
 )

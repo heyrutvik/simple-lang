@@ -1,5 +1,7 @@
 package com.rr.kernel
 
+import shapeless._
+
 trait Construct[A] {
   def string(a: A): String = a.toString
   def syntax(a: A): String
@@ -9,7 +11,7 @@ trait Construct[A] {
 
 object Construct {
 
-  def apply[A](implicit c: Construct[A]) = c
+  def apply[A](implicit c: Construct[A]): Construct[A] = c
 }
 
 object ConstructSyntax {
@@ -24,13 +26,34 @@ object ConstructSyntax {
 
 object ConstructImplicits {
 
-  implicit val numberConstruct = new Construct[Num] {
+  /**
+    * TODO: SyntaxConstruct Must be Automated
+    */
+  implicit val syntaxConstruct: Construct[Syntax] = new Construct[Syntax] {
+    override def syntax(a: Syntax): String = a match {
+      case n: Num => numberConstruct.syntax(n)
+      case a: Add => addConstruct.syntax(a)
+      case m: Mul => mulConstruct.syntax(m)
+    }
+    override def isReducible(a: Syntax): Boolean = a match {
+      case n: Num => numberConstruct.isReducible(n)
+      case a: Add => addConstruct.isReducible(a)
+      case m: Mul => mulConstruct.isReducible(m)
+    }
+    override def reduce(a: Syntax): Syntax = a match {
+      case n: Num => numberConstruct.reduce(n)
+      case a: Add => addConstruct.reduce(a)
+      case m: Mul => mulConstruct.reduce(m)
+    }
+  }
+
+  implicit val numberConstruct: Construct[Num] = new Construct[Num] {
     override def syntax(a: Num): String = s"${a.value.toString}"
     override def isReducible(a: Num): Boolean = false
     override def reduce(a: Num): Num = a
   }
 
-  implicit def addConstruct(implicit cs: Construct[Syntax]) = new Construct[Add] {
+  implicit def addConstruct(implicit cs: Construct[Syntax]): Construct[Add] = new Construct[Add] {
     override def syntax(a: Add): String = s"${cs.syntax(a.left)} + ${cs.syntax(a.right)}"
     override def isReducible(a: Add): Boolean = true
     override def reduce(a: Add): Syntax = a match {
@@ -40,7 +63,7 @@ object ConstructImplicits {
     }
   }
 
-  implicit def mulConstruct(implicit cs: Construct[Syntax]) = new Construct[Mul] {
+  implicit def mulConstruct(implicit cs: Construct[Syntax]): Construct[Mul] = new Construct[Mul] {
     override def syntax(a: Mul): String = s"${cs.syntax(a.left)} * ${cs.syntax(a.right)}"
     override def isReducible(a: Mul): Boolean = true
     override def reduce(a: Mul): Syntax = a match {

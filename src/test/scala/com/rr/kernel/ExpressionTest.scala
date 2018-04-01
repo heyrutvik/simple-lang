@@ -13,11 +13,11 @@ class ExpressionTest extends UnitTest("Expression") {
     expression2.syntax should be ("2 + 3 * 4")
     expression2.isReducible should  not be (false)
     val expression3 = expression2.reduce
-    expression3.reduce.syntax should be ("2 + 12")
+    expression3.syntax should be ("2 + 12")
     expression3.isReducible should be (true)
     val expression4 = expression3.reduce
-    expression3.reduce.syntax should be ("14")
-    expression3.isReducible should be (false)
-    println(expression3.string)
+    expression4.reduce.syntax should be ("14")
+    expression4.isReducible should be (false)
+    println(expression4.string)
   }
 }
