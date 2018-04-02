@@ -5,7 +5,7 @@ import ConstructImplicits._
 import ConstructSyntax._
 
 case class Machine(expr: Expr, env: Expr.Env) {
-  def print = println(s"\nexpr: ${expr.syntax}\nenv: $env\n")
+  def print = println(s"\nexpression: ${expr.syntax}\nenvironment: ${env.mkString("[", ",", "]")}\n")
 }
 
 object Machine {
@@ -17,7 +17,7 @@ object Machine {
     def end: MachineState[Boolean] = State.inspect(_ => false)
 
     def execute: MachineState[Boolean] = State { machine =>
-//      machine.print
+      machine.print
       val Product(newExpr, newEnv) = machine.expr.reduce(machine.env) // TODO: tricky env vs machine.env
       (Machine(newExpr, newEnv.getOrElse(Map.empty)), newExpr.isReducible)
     }

@@ -212,7 +212,7 @@ object ConstructImplicits { self =>
   }
 
   implicit def seqConstruct(implicit cs: Construct[Expr]): Construct[Seq] = new Construct[Seq] {
-    override def syntax(a: Seq): String = s"{${cs.syntax(a.first)}; ${cs.syntax(a.second)}}"
+    override def syntax(a: Seq): String = s"{ ${cs.syntax(a.first)}; ${cs.syntax(a.second)} }"
     override def isReducible(a: Seq): Boolean = true
     override def reduce(a: Seq)(implicit env: Env): Product = {
       a.first match {
@@ -234,6 +234,15 @@ object ConstructImplicits { self =>
     override def reduce(a: While)(implicit env: Env): Product = {
       Product(If(a.condition, Seq(a.body, a), DoNothing) , env)
     }
-    override def evaluate(a: While)(implicit env: Env): Product = ???
+    override def evaluate(a: While)(implicit env: Env): Product = {
+      cs.evaluate(a.condition).expr match {
+        case Bool(false) => Product(DoNothing, env)
+        case Bool(true) => {
+          val Product(_, newEnv) = cs.evaluate(a.body)
+          evaluate(a)(newEnv.getOrElse(Map.empty))
+        }
+        case _ => throw new Exception("evaluate: something went wrong")
+      }
+    }
   }
 }
