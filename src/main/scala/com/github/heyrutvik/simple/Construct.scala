@@ -8,6 +8,7 @@ trait Construct[A] {
   def isReducible(a: A): Boolean
   def reduce(a: A)(implicit env: Expr.Env): Product
   def evaluate(a: A)(implicit env: Expr.Env): Product
+  def toJs(a: A): String
 }
 
 object Construct {
@@ -23,6 +24,7 @@ object ConstructSyntax {
     def isReducible(implicit c: Construct[A]): Boolean = c.isReducible(value)
     def reduce(env: Expr.Env)(implicit c: Construct[A]): Product = c.reduce(value)(env)
     def evaluate(env: Expr.Env)(implicit c: Construct[A]): Product = c.evaluate(value)(env)
+    def toJs(implicit c: Construct[A]): String = c.toJs(value)
   }
 }
 
@@ -84,12 +86,26 @@ object ConstructImplicits { self =>
     case s: Seq => seqConstruct.evaluate(s)
     case w: While => whileConstruct.evaluate(w)
   }
+  private def toJs(a: Expr): String = a match {
+    case n: Num => numberConstruct.toJs(n)
+    case a: Add => addConstruct.toJs(a)
+    case m: Mul => mulConstruct.toJs(m)
+    case b: Bool => boolConstruct.toJs(b)
+    case lt: LessThan => lessThanConstruct.toJs(lt)
+    case v: Var => varConstruct.toJs(v)
+    case dn: DoNothing.type => doNothingConstruct.toJs(dn)
+    case as: Assign => assignConstruct.toJs(as)
+    case i: If => ifConstruct.toJs(i)
+    case s: Seq => seqConstruct.toJs(s)
+    case w: While => whileConstruct.toJs(w)
+  }
 
   implicit val productConstruct: Construct[Product] = new Construct[Product] {
     override def syntax(a: Product): String = self.syntax(a.expr)
     override def isReducible(a: Product): Boolean = self.isReducible(a.expr)
     override def reduce(a: Product)(implicit env: Expr.Env): Product = self.reduce(a.expr)
     override def evaluate(a: Product)(implicit env: Env): Product = self.evaluate(a.expr)
+    override def toJs(a: Product): String = self.toJs(a.expr)
   }
 
   implicit val exprConstruct: Construct[Expr] = new Construct[Expr] {
@@ -97,6 +113,7 @@ object ConstructImplicits { self =>
     override def isReducible(a: Expr): Boolean = self.isReducible(a)
     override def reduce(a: Expr)(implicit env: Expr.Env): Product = self.reduce(a)
     override def evaluate(a: Expr)(implicit env: Env): Product = self.evaluate(a)
+    override def toJs(a: Expr): String = self.toJs(a)
   }
 
   implicit val numberConstruct: Construct[Num] = new Construct[Num] {
@@ -104,6 +121,7 @@ object ConstructImplicits { self =>
     override def isReducible(a: Num): Boolean = false
     override def reduce(a: Num)(implicit env: Expr.Env): Product = Product(a)
     override def evaluate(a: Num)(implicit env: Env): Product = Product(a)
+    override def toJs(a: Num): String = s"e => ${a.value}"
   }
 
   implicit def addConstruct(implicit cs: Construct[Expr]): Construct[Add] = new Construct[Add] {
@@ -120,6 +138,7 @@ object ConstructImplicits { self =>
         case _ => throw new Exception("evaluate: something went wrong")
       }
     }
+    override def toJs(a: Add): String = s"e => (${cs.toJs(a.left)})(e) + (${cs.toJs(a.right)})(e)"
   }
 
   implicit def mulConstruct(implicit cs: Construct[Expr]): Construct[Mul] = new Construct[Mul] {
@@ -136,6 +155,7 @@ object ConstructImplicits { self =>
         case _ => throw new Exception("evaluate: something went wrong")
       }
     }
+    override def toJs(a: Mul): String = s"e => (${cs.toJs(a.left)})(e) * (${cs.toJs(a.right)})(e)"
   }
 
   implicit val boolConstruct: Construct[Bool] = new Construct[Bool] {
@@ -143,6 +163,7 @@ object ConstructImplicits { self =>
     override def isReducible(a: Bool): Boolean = false
     override def reduce(a: Bool)(implicit env: Expr.Env): Product = Product(a)
     override def evaluate(a: Bool)(implicit env: Env): Product = Product(a)
+    override def toJs(a: Bool): String = s"e => ${a.value}"
   }
 
   implicit def lessThanConstruct(implicit cs: Construct[Expr]): Construct[LessThan] = new Construct[LessThan] {
@@ -159,6 +180,7 @@ object ConstructImplicits { self =>
         case _ => throw new Exception("evaluate: something went wrong")
       }
     }
+    override def toJs(a: LessThan): String = s"e => (${cs.toJs(a.left)})(e) < (${cs.toJs(a.right)})(e)"
   }
 
   implicit val varConstruct: Construct[Var] = new Construct[Var] {
@@ -166,6 +188,7 @@ object ConstructImplicits { self =>
     override def isReducible(a: Var): Boolean = true
     override def reduce(a: Var)(implicit env: Expr.Env): Product = Product(env(a.name))
     override def evaluate(a: Var)(implicit env: Env): Product = Product(env(a.name))
+    override def toJs(a: Var): String = s"e => e.get('${a.name.name}')"
   }
 
   implicit val doNothingConstruct: Construct[DoNothing.type] = new Construct[DoNothing.type] {
@@ -173,6 +196,7 @@ object ConstructImplicits { self =>
     override def isReducible(a: DoNothing.type): Boolean = false
     override def reduce(a: DoNothing.type)(implicit env: Expr.Env): Product = Product(a, env)
     override def evaluate(a: DoNothing.type)(implicit env: Env): Product = Product(a, env)
+    override def toJs(a: DoNothing.type): String = s"e => e"
   }
 
   implicit def assignConstruct(implicit cs: Construct[Expr]): Construct[Assign] = new Construct[Assign] {
@@ -185,6 +209,7 @@ object ConstructImplicits { self =>
         Product(DoNothing, env + (a.name -> a.expr))
     }
     override def evaluate(a: Assign)(implicit env: Env): Product = Product(DoNothing, env + (a.name -> cs.evaluate(a.expr).expr))
+    override def toJs(a: Assign): String = s"e => e.set('${a.name.name}', (${cs.toJs(a.expr)})(e))"
   }
 
   implicit def ifConstruct(implicit cs: Construct[Expr]): Construct[If] = new Construct[If] {
@@ -209,6 +234,8 @@ object ConstructImplicits { self =>
         case _ => throw new Exception("evaluate: something went wrong")
       }
     }
+    override def toJs(a: If): String =
+      s"e => { if ((${cs.toJs(a.condition)})(e)) { return (${cs.toJs(a.consequence)})(e) } else { return (${cs.toJs(a.alternative)})(e)} }"
   }
 
   implicit def seqConstruct(implicit cs: Construct[Expr]): Construct[Seq] = new Construct[Seq] {
@@ -223,9 +250,9 @@ object ConstructImplicits { self =>
         }
       }
     }
-
     override def evaluate(a: Seq)(implicit env: Env): Product =
       Product(DoNothing, cs.evaluate(a.second)(cs.evaluate(a.first).env.getOrElse(Map.empty)).env)
+    override def toJs(a: Seq): String = s"e => { return ((${cs.toJs(a.second)}))((${cs.toJs(a.first)})(e)) }"
   }
 
   implicit def whileConstruct(implicit cs: Construct[Expr]): Construct[While] = new Construct[While] {
@@ -244,5 +271,7 @@ object ConstructImplicits { self =>
         case _ => throw new Exception("evaluate: something went wrong")
       }
     }
+    override def toJs(a: While): String =
+      s"e => { while ((${cs.toJs(a.condition)})(e)) { e = (${cs.toJs(a.body)})(e) } return e;}"
   }
 }

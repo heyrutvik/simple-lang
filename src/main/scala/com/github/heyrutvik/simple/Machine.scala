@@ -12,6 +12,7 @@ object Machine {
 
   type MachineState[A] = State[Machine, A]
 
+  // Operational Semantics
   def interpreter(expr: Expr, env: Expr.Env) = {
 
     def end: MachineState[Boolean] = State.inspect(_ => false)
@@ -36,4 +37,17 @@ object Machine {
 
     exec.runA(Machine(expr, env)).value
   }
+
+  // Denotational Semantics
+  def compileToJs[A](expr: Expr, env: Expr.Env) = {
+    def envJs(env: Expr.Env): String = {
+      val array = env.map {
+        case (sym, expr) => s"['${sym.name}', ${expr.syntax}]"
+      }.mkString("[", ",", "]")
+      s"new Map($array)"
+    }
+    s"(${expr.toJs})(${envJs(env)})"
+  }
+
+  Machine.compileToJs(If(Var('a), Assign('x, Num(10)), While(LessThan(Var('x), Num(5)), Assign('x, Mul(Var('x), Num(3))))), Map('a -> Bool(false), 'x -> Num(1)))
 }

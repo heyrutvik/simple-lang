@@ -6,4 +6,5 @@ Scala Implementation of SIMPLE language which is explained in the book Understan
 - [x] Operational Semantics
 	- [x] Small-Step Semantics
 	- [x] Big-Step Semantics
-- [ ] Denotational Semantics
+- [x] Denotational Semantics
+- [ ] Parser

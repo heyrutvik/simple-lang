@@ -11,7 +11,7 @@ class EvaluateTest extends UnitTest("Evaluate") {
     Add(Var('x), Num(5)).evaluate(env).expr should be (Num(6))
   }
 
-  "evaluate sum" should "be" in {
+  "evaluate mul" should "be" in {
     Mul(Var('x), Num(5)).evaluate(env).expr should be (Num(5))
   }
 
