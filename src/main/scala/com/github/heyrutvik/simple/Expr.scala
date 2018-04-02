@@ -11,6 +11,7 @@ case object DoNothing extends Expr
 case class Assign(name: Symbol, expr: Expr) extends Expr
 case class If(condition: Expr, consequence: Expr, alternative: Expr) extends Expr
 case class Seq(first: Expr, second: Expr) extends Expr
+case class While(condition: Expr, body: Expr) extends Expr
 
 object Expr {
 

@@ -12,13 +12,13 @@ object Machine {
 
   type MachineState[A] = State[Machine, A]
 
-  def interpreter(expr: Expr)(implicit env: Expr.Env) = {
+  def interpreter(expr: Expr, env: Expr.Env) = {
 
     def end: MachineState[Boolean] = State.inspect(_ => false)
 
     def execute: MachineState[Boolean] = State { machine =>
       machine.print
-      val Product(newExpr, newEnv) = machine.expr.reduce
+      val Product(newExpr, newEnv) = machine.expr.reduce(machine.env) // TODO: tricky env vs machine.env
       (Machine(newExpr, newEnv.getOrElse(Map.empty)), newExpr.isReducible)
     }
 

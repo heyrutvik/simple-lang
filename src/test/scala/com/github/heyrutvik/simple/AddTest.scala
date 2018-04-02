@@ -11,5 +11,7 @@ class AddTest extends UnitTest("Add") {
     add.syntax should be ("1 + 2")
     add.isReducible should be (true)
     add.isReducible should not be (false)
+
+    add.evaluate(Map.empty).expr should be (Num(3))
   }
 }
