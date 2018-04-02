@@ -17,7 +17,7 @@ object Machine {
     def end: MachineState[Boolean] = State.inspect(_ => false)
 
     def execute: MachineState[Boolean] = State { machine =>
-      machine.print
+//      machine.print
       val Product(newExpr, newEnv) = machine.expr.reduce(machine.env) // TODO: tricky env vs machine.env
       (Machine(newExpr, newEnv.getOrElse(Map.empty)), newExpr.isReducible)
     }

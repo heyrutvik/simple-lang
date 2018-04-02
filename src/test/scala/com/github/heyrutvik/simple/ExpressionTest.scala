@@ -19,6 +19,5 @@ class ExpressionTest extends UnitTest("Expression") {
     val expression4 = expression3.reduce(environment)
     expression4.reduce(environment).syntax should be ("14")
     expression4.isReducible should be (false)
-    println(expression4.string)
   }
 }

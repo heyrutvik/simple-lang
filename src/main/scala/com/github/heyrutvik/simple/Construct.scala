@@ -188,7 +188,8 @@ object ConstructImplicits { self =>
   }
 
   implicit def ifConstruct(implicit cs: Construct[Expr]): Construct[If] = new Construct[If] {
-    override def syntax(a: If): String = s"if (${cs.syntax(a.condition)}) { ${cs.syntax(a.consequence)} } else { ${cs.syntax(a.alternative)} }"
+    override def syntax(a: If): String =
+      s"if (${cs.syntax(a.condition)}) { ${cs.syntax(a.consequence)} } else { ${cs.syntax(a.alternative)} }"
     override def isReducible(a: If): Boolean = true
     override def reduce(a: If)(implicit env: Env): Product = {
       if (cs.isReducible(a.condition))
@@ -223,7 +224,8 @@ object ConstructImplicits { self =>
       }
     }
 
-    override def evaluate(a: Seq)(implicit env: Env): Product = Product(DoNothing, cs.evaluate(a.second)(cs.evaluate(a.first).env.getOrElse(Map.empty)).env)
+    override def evaluate(a: Seq)(implicit env: Env): Product =
+      Product(DoNothing, cs.evaluate(a.second)(cs.evaluate(a.first).env.getOrElse(Map.empty)).env)
   }
 
   implicit def whileConstruct(implicit cs: Construct[Expr]): Construct[While] = new Construct[While] {
@@ -232,18 +234,6 @@ object ConstructImplicits { self =>
     override def reduce(a: While)(implicit env: Env): Product = {
       Product(If(a.condition, Seq(a.body, a), DoNothing) , env)
     }
-    override def evaluate(a: While)(implicit env: Env): Product = {
-      cs.evaluate(a.condition).expr match {
-        case Bool(true) => {
-          val Product(newExpr, newEnv) = cs.evaluate(a.body)
-          newExpr match {
-            case x: While => evaluate(x)(newEnv.getOrElse(Map.empty))
-            case _ => Product(DoNothing, env)
-          }
-        }
-        case Bool(false) => Product(DoNothing, env)
-        case _ => throw new Exception("evaluate: something went wrong")
-      }
-    }
+    override def evaluate(a: While)(implicit env: Env): Product = ???
   }
 }
