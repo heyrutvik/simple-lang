@@ -9,7 +9,8 @@ inThisBuild(Seq(
 libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
   "org.typelevel" %% "cats-core" % "1.0.1",
-  "com.chuusai" %% "shapeless" % "2.3.3"
+  "com.chuusai" %% "shapeless" % "2.3.3",
+  "com.lihaoyi" %% "fastparse" % "1.0.0"
 )
 
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"

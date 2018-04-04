@@ -184,7 +184,7 @@ object ConstructImplicits { self =>
   }
 
   implicit val varConstruct: Construct[Var] = new Construct[Var] {
-    override def syntax(a: Var): String = s"${a.name.toString}"
+    override def syntax(a: Var): String = s"${a.name.name.toString}"
     override def isReducible(a: Var): Boolean = true
     override def reduce(a: Var)(implicit env: Expr.Env): Product = Product(env(a.name))
     override def evaluate(a: Var)(implicit env: Env): Product = Product(env(a.name))
@@ -200,7 +200,7 @@ object ConstructImplicits { self =>
   }
 
   implicit def assignConstruct(implicit cs: Construct[Expr]): Construct[Assign] = new Construct[Assign] {
-    override def syntax(a: Assign): String = s"${a.name} = ${cs.syntax(a.expr)}"
+    override def syntax(a: Assign): String = s"${a.name.name} = ${cs.syntax(a.expr)}"
     override def isReducible(a: Assign): Boolean = true
     override def reduce(a: Assign)(implicit env: Env): Product = {
       if (cs.isReducible(a.expr))
