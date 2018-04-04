@@ -40,13 +40,13 @@ object Machine {
 
   // Denotational Semantics
   def compileToJs[A](expr: Expr, env: Expr.Env) = {
-    def envJs(env: Expr.Env): String = {
-      val array = env.map {
-        case (sym, expr) => s"['${sym.name}', ${expr.syntax}]"
-      }.mkString("[", ",", "]")
-      s"new Map($array)"
-    }
-    s"(${expr.toJs})(${envJs(env)})"
+    s"(${expr.toJs})(new Map(${envPrint(env)}))"
+  }
+
+  def envPrint(env: Expr.Env): String = {
+    env.map {
+      case (sym, expr) => s"['${sym.name}', ${expr.syntax}]"
+    }.mkString("[", ",", "]")
   }
 
   Machine.compileToJs(If(Var('a), Assign('x, Num(10)), While(LessThan(Var('x), Num(5)), Assign('x, Mul(Var('x), Num(3))))), Map('a -> Bool(false), 'x -> Num(1)))
