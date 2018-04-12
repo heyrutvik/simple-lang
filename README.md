@@ -1,5 +1,5 @@
 # simple-lang
-SIMPLE language implementation in Scala. It is a toy language which is explained in the Tom Stuart's book Understanding Computation.
+SIMPLE language implementation in Scala. It is a toy language which is explained in Tom Stuart's book Understanding Computation.
 
 **Tasks**
 
