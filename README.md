@@ -20,6 +20,6 @@ SIMPLE language implementation in Scala. It is a toy language which is explained
 	- to compile program in javascript
 	```run -compile <program.simple> -o <program.js>```
 	
-***Note***
+**Note**
 - ```<program.simple>``` must be a file in current directory, it doesn't expect file path!
 - ```hello.simple``` file is available in root directory to execute above commands.
