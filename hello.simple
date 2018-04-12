@@ -1,3 +1,10 @@
 count = 10;
 x = true;
-while (x) { count = count + 1; if (count < 100) { count = count * 2 } else { x = false } }
+while (x) { 
+  count = count + 1; 
+  if (count < 100) {
+    count = count * 2 
+  } else {
+    x = false
+  } 
+}

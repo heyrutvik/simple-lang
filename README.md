@@ -7,4 +7,4 @@ SIMPLE language implementation in Scala. It is a toy language which is explained
 	- [x] Small-Step Semantics
 	- [x] Big-Step Semantics
 - [x] Denotational Semantics
-- [ ] Parser
+- [x] Parser
