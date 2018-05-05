@@ -1,6 +1,7 @@
 package com.github.heyrutvik.simple
 
 import Expr.Env
+import shapeless.{:+:, CNil, Coproduct, Generic, Inl, Inr, Lazy}
 
 trait Construct[A] {
   def string(a: A): String = a.toString
@@ -30,90 +31,50 @@ object ConstructSyntax {
 
 object ConstructImplicits { self =>
 
-  /**
-    * TODO: These Methods Must be Automated
-    */
-
-  private def syntax(a: Expr): String = a match {
-    case n: Num => numberConstruct.syntax(n)
-    case a: Add => addConstruct.syntax(a)
-    case m: Mul => mulConstruct.syntax(m)
-    case b: Bool => boolConstruct.syntax(b)
-    case lt: LessThan => lessThanConstruct.syntax(lt)
-    case v: Var => varConstruct.syntax(v)
-    case dn: DoNothing.type => doNothingConstruct.syntax(dn)
-    case as: Assign => assignConstruct.syntax(as)
-    case i: If => ifConstruct.syntax(i)
-    case s: Seq => seqConstruct.syntax(s)
-    case w: While => whileConstruct.syntax(w)
-  }
-  private def isReducible(a: Expr): Boolean = a match {
-    case n: Num => numberConstruct.isReducible(n)
-    case a: Add => addConstruct.isReducible(a)
-    case m: Mul => mulConstruct.isReducible(m)
-    case b: Bool => boolConstruct.isReducible(b)
-    case lt: LessThan => lessThanConstruct.isReducible(lt)
-    case v: Var => varConstruct.isReducible(v)
-    case dn: DoNothing.type => doNothingConstruct.isReducible(dn)
-    case as: Assign => assignConstruct.isReducible(as)
-    case i: If => ifConstruct.isReducible(i)
-    case s: Seq => seqConstruct.isReducible(s)
-    case w: While => whileConstruct.isReducible(w)
-  }
-  private def reduce(a: Expr)(implicit env: Expr.Env): Product = a match {
-    case n: Num => numberConstruct.reduce(n)
-    case a: Add => addConstruct.reduce(a)
-    case m: Mul => mulConstruct.reduce(m)
-    case b: Bool => boolConstruct.reduce(b)
-    case lt: LessThan => lessThanConstruct.reduce(lt)
-    case v: Var => varConstruct.reduce(v)
-    case dn: DoNothing.type => doNothingConstruct.reduce(dn)
-    case as: Assign => assignConstruct.reduce(as)
-    case i: If => ifConstruct.reduce(i)
-    case s: Seq => seqConstruct.reduce(s)
-    case w: While => whileConstruct.reduce(w)
-  }
-  private def evaluate(a: Expr)(implicit env: Expr.Env): Product = a match {
-    case n: Num => numberConstruct.evaluate(n)
-    case a: Add => addConstruct.evaluate(a)
-    case m: Mul => mulConstruct.evaluate(m)
-    case b: Bool => boolConstruct.evaluate(b)
-    case lt: LessThan => lessThanConstruct.evaluate(lt)
-    case v: Var => varConstruct.evaluate(v)
-    case dn: DoNothing.type => doNothingConstruct.evaluate(dn)
-    case as: Assign => assignConstruct.evaluate(as)
-    case i: If => ifConstruct.evaluate(i)
-    case s: Seq => seqConstruct.evaluate(s)
-    case w: While => whileConstruct.evaluate(w)
-  }
-  private def toJs(a: Expr): String = a match {
-    case n: Num => numberConstruct.toJs(n)
-    case a: Add => addConstruct.toJs(a)
-    case m: Mul => mulConstruct.toJs(m)
-    case b: Bool => boolConstruct.toJs(b)
-    case lt: LessThan => lessThanConstruct.toJs(lt)
-    case v: Var => varConstruct.toJs(v)
-    case dn: DoNothing.type => doNothingConstruct.toJs(dn)
-    case as: Assign => assignConstruct.toJs(as)
-    case i: If => ifConstruct.toJs(i)
-    case s: Seq => seqConstruct.toJs(s)
-    case w: While => whileConstruct.toJs(w)
+  implicit def genericConstruct[A, R](
+    implicit gen: Generic.Aux[A, R], c: Lazy[Construct[R]]): Construct[A] = {
+    new Construct[A] {
+      override def syntax(a: A): String = c.value.syntax(gen.to(a))
+      override def isReducible(a: A): Boolean = c.value.isReducible(gen.to(a))
+      override def reduce(a: A)(implicit env: Env): Product = c.value.reduce(gen.to(a))
+      override def evaluate(a: A)(implicit env: Env): Product = c.value.evaluate(gen.to(a))
+      override def toJs(a: A): String = c.value.toJs(gen.to(a))
+    }
   }
 
-  implicit val productConstruct: Construct[Product] = new Construct[Product] {
-    override def syntax(a: Product): String = self.syntax(a.expr)
-    override def isReducible(a: Product): Boolean = self.isReducible(a.expr)
-    override def reduce(a: Product)(implicit env: Expr.Env): Product = self.reduce(a.expr)
-    override def evaluate(a: Product)(implicit env: Env): Product = self.evaluate(a.expr)
-    override def toJs(a: Product): String = self.toJs(a.expr)
+  implicit val cnilConstruct: Construct[CNil] = new Construct[CNil] {
+    private def inconceivable = throw new Exception("Inconceivable")
+    override def syntax(a: CNil): String = inconceivable
+    override def isReducible(a: CNil): Boolean = inconceivable
+    override def reduce(a: CNil)(implicit env: Env): Product = inconceivable
+    override def evaluate(a: CNil)(implicit env: Env): Product = inconceivable
+    override def toJs(a: CNil): String = inconceivable
   }
 
-  implicit val exprConstruct: Construct[Expr] = new Construct[Expr] {
-    override def syntax(a: Expr): String = self.syntax(a)
-    override def isReducible(a: Expr): Boolean = self.isReducible(a)
-    override def reduce(a: Expr)(implicit env: Expr.Env): Product = self.reduce(a)
-    override def evaluate(a: Expr)(implicit env: Env): Product = self.evaluate(a)
-    override def toJs(a: Expr): String = self.toJs(a)
+  implicit def coproductConstruct[H, T <: Coproduct](
+    implicit hc: Lazy[Construct[H]], tc: Construct[T]): Construct[H :+: T] = {
+    new Construct[H :+: T] {
+      override def syntax(a: :+:[H, T]): String = a match {
+        case Inl(h) => hc.value.syntax(h)
+        case Inr(t) => tc.syntax(t)
+      }
+      override def isReducible(a: :+:[H, T]): Boolean = a match {
+        case Inl(h) => hc.value.isReducible(h)
+        case Inr(t) => tc.isReducible(t)
+      }
+      override def reduce(a: :+:[H, T])(implicit env: Env): Product = a match {
+        case Inl(h) => hc.value.reduce(h)
+        case Inr(t) => tc.reduce(t)
+      }
+      override def evaluate(a: :+:[H, T])(implicit env: Env): Product = a match {
+        case Inl(h) => hc.value.evaluate(h)
+        case Inr(t) => tc.evaluate(t)
+      }
+      override def toJs(a: :+:[H, T]): String = a match {
+        case Inl(h) => hc.value.toJs(h)
+        case Inr(t) => tc.toJs(t)
+      }
+    }
   }
 
   implicit val numberConstruct: Construct[Num] = new Construct[Num] {
