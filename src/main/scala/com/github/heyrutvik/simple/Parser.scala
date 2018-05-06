@@ -38,21 +38,23 @@ object Parser {
     case (name, expr) => Assign(Symbol(name), expr)
   }
 
-  val whileLoop: Parser[While] = P(P("while (").rep(exactly = 1) ~ expression ~ P(") { ").rep(exactly = 1) ~ statement ~ P(" }").rep(exactly = 1)).map {
+  val whileLoop: Parser[While] = P(P("while (").rep(exactly = 1) ~ expression ~ P(") {").rep(exactly = 1) ~ whitespace ~ statement ~ whitespace ~ P("}").rep(exactly = 1)).map {
     case (cond, expr) => While(cond, expr)
   }
 
   val ifCond: Parser[If] = {
     P(P("if (").rep(exactly = 1) ~ expression ~
-      P(") { ").rep(exactly = 1) ~ statement ~
-      P(" } else { ").rep(exactly = 1) ~ statement
-      ~ P(" }").rep(exactly = 1))
+      P(") {").rep(exactly = 1) ~ whitespace ~ statement ~ whitespace ~
+      P("} else {").rep(exactly = 1) ~ whitespace ~ statement ~ whitespace ~
+      P("}").rep(exactly = 1))
       .map {
         case (cond, conse, alter) => If(cond, conse, alter)
       }
   }
 
-  val sequence: Parser[Expr] = P(subStatement ~ P(CharsWhileIn("; \r\n") ~ subStatement).rep).map {
+  val whitespace = CharsWhileIn(" \r\n")
+
+  val sequence: Parser[Expr] = P(subStatement ~ P(P(";") ~ whitespace ~ subStatement).rep).map {
     case (f, s) => s.foldLeft(f) {
       case (z, b) => Seq(z, b)
     }
